@@ -11,14 +11,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 //import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-//import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @RestController
 @RequestMapping("/user")
-public class UserController {
+class UserController {
 
 	// atomic ID value - unique even with multiple sessions running
 	//private final AtomicLong counter = new AtomicLong();	
@@ -32,7 +33,8 @@ public class UserController {
 	
 	
 	@GetMapping
-	public User getUser(@RequestParam(value="username", required=true) String userName) {
+	@ResponseBody
+	private User getUser(@RequestParam(value="username", required=true) String userName) {
 		// read from the database
 		UserRepository repo = new UserRepositoryImpl();
 		
@@ -46,8 +48,9 @@ public class UserController {
 	
 	// add a new user with default values if not specified
 	@PostMapping
+	@ResponseBody
 	@ResponseStatus(HttpStatus.CREATED)
-	public User postUser(
+	private User postUser(
 			@RequestParam(value="username", defaultValue="User Name Not Specified") String userName,
 			@RequestParam(value="name", defaultValue="Name Not Specified") String name,
 			@RequestParam(value="email", defaultValue="Email Not Specified") String email) {
@@ -61,21 +64,28 @@ public class UserController {
 	
 	// delete a user based on the user's ID
 	@DeleteMapping
+	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
-	public void deleteUser(
+	private void deleteUser(
 			@RequestParam(value="id", required=true) long id) {
-		// write to the database here with try/catch
-		UserRepository repo = new UserRepositoryImpl();
-		if(repo.delete(id) != 1)
+
+		try {
+			UserRepository repo = new UserRepositoryImpl();
+			repo.delete(id);
+		}
+		catch(MyResourceNotFoundException exc)
 		{
 			// Implement 404 error
+			throw new ResponseStatusException(
+					HttpStatus.NOT_FOUND, "User not found.  No records were deleted.");
 		}
 	}
 	
 	// update a user's email and name based on the user's ID
 	@PutMapping
+	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
-	public User putUser(
+	private User putUser(
 			@RequestParam(value="id", required=true) long id,
 			@RequestParam(value="name", defaultValue="Name Not Specified") String name,
 			@RequestParam(value="email", defaultValue="Email Not Specified") String email) {
@@ -85,10 +95,15 @@ public class UserController {
 		UserRepository repo = new UserRepositoryImpl();
 		User user = new User(id, "", name, email);
 		
-		User result = repo.update(user);
-		if(result != null) {
-			return result;			
+		try {
+			User result = repo.update(user);
+			return result;
 		}
-		return null;	// Implement 404 error
+		catch(MyResourceNotFoundException exc)
+		{
+			// Implement 404 error
+			throw new ResponseStatusException(
+					HttpStatus.NOT_FOUND, "User not found.  No records were updated.");
+		}
 	}
 }

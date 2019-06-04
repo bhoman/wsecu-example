@@ -13,8 +13,8 @@ public interface UserRepository {
 	
 	List<User> findAll();
 	
-	User update(User user);
+	User update(User user) throws MyResourceNotFoundException;
 	
-	int delete(long id);
+	int delete(long id) throws MyResourceNotFoundException;
 	
 }

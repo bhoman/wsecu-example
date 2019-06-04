@@ -50,7 +50,7 @@ public class UserRepositoryImpl implements UserRepository {
 	public User findOne(String user_name) {
 		System.out.println("user_name = " + user_name);							// these should be logger methods (Log4j?)
 		fillTempList();
-		printTempList();
+		printTempList("Find One: initial list");
 		
 		for(User user : database) {
 			
@@ -62,6 +62,7 @@ public class UserRepositoryImpl implements UserRepository {
 			}
 		}
 		
+		// could implement 404 error here
 		System.out.println("No User found for username : " + user_name);
 		return null;
 
@@ -95,7 +96,8 @@ public class UserRepositoryImpl implements UserRepository {
 	}
 	
 	// these should be logger methods (Log4j?)
-	private void printTempList() {
+	private void printTempList(String action) {
+		System.out.println(action);
 		for(User user: database) {
 			System.out.println( "Id: " + user.getId() + 
 								" User name: " + user.getUserName() +
@@ -111,6 +113,7 @@ public class UserRepositoryImpl implements UserRepository {
 
 		// TEMPORARY - id will be list length + 1
 		fillTempList();
+		printTempList("Save: before insert");
 		
 		System.out.println("Initial list size: " + database.size());
 		int len = database.size();
@@ -120,7 +123,7 @@ public class UserRepositoryImpl implements UserRepository {
 		database.add(user);
 		System.out.println("New list size: " + database.size());
 		
-		printTempList();
+		printTempList("Save: after insert");
 		
 		return database.get((int) user.getId()-1);
 		
@@ -161,9 +164,9 @@ public class UserRepositoryImpl implements UserRepository {
 	}
 
 	@Override
-	public User update(User user) {
+	public User update(User user) throws MyResourceNotFoundException {
 		fillTempList();
-		printTempList();
+		printTempList("Update: before update");
 		
 		User userToUpdate = null;
 		try
@@ -171,20 +174,21 @@ public class UserRepositoryImpl implements UserRepository {
 			userToUpdate = database.get((int) user.getId()-1);
 		}
 		catch (IndexOutOfBoundsException e)
-		{			
+		{
+			throw new MyResourceNotFoundException();
 		}
-		
+
 		if(userToUpdate != null) {
 			userToUpdate.setEMail(user.getEmail());
 			userToUpdate.setName(user.getName());
 		
-			printTempList();
-			return userToUpdate;	
+			printTempList("Update: after update");
+			return userToUpdate;
 		}
 		else
-			return null;	// no record found to update
-
+			throw new MyResourceNotFoundException();	// no record found to update
 		
+				
 		// ******************************
 		// this should work but does not.  The QueryForObject is throwing a NullPointerException for some reason
 		// commented out until I can figure this out
@@ -193,9 +197,9 @@ public class UserRepositoryImpl implements UserRepository {
 	}
 
 	@Override
-	public int delete(long id) {
+	public int delete(long id) throws MyResourceNotFoundException {
 		fillTempList();
-		printTempList();
+		printTempList("Deleted: before delete");
 
 		User userToUpdate = null;
 		try
@@ -204,16 +208,17 @@ public class UserRepositoryImpl implements UserRepository {
 		}
 		catch (IndexOutOfBoundsException e)
 		{
+			throw new MyResourceNotFoundException();
 		}
 
 		if(userToUpdate != null) {
 			database.remove((int)id-1);
 			
-			printTempList();
+			printTempList("Delete: after delete");
 			return 1;	// in real code, this would be number of records deleted
 		}
 		else
-			return 0;	// no record found to update
+			throw new MyResourceNotFoundException();	// no record found to update
 		
 		
 		// ******************************
