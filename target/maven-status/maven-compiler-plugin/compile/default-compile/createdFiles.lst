@@ -1,7 +1,4 @@
 wsecu\UserRepository.class
 wsecu\UserController.class
-wsecu\UserRepositoryImpl.class
-wsecu\UserRepositoryImpl$1.class
 wsecu\Application.class
 wsecu\User.class
-wsecu\UserRepositoryImpl$UserRowMapper.class
