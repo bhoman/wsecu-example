@@ -1,28 +1,21 @@
 package wsecu;
 
-//import java.util.List;
-//import java.util.concurrent.atomic.AtomicLong;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-
 @RestController
 @RequestMapping("/user")
 class UserController {
 
-	// atomic ID value - unique even with multiple sessions running
-	//private final AtomicLong counter = new AtomicLong();	
 	
 //	@GetMapping
 //	public List<User> getAll() {
@@ -32,11 +25,21 @@ class UserController {
 //	}
 	
 	
+	private IUserService service;
+	
+	private UserController() {
+		
+		// TEMPORARY fix until I get the H2 database working
+		service= new UserService_Temp();
+
+	}
+	
+	
 	@GetMapping
 	@ResponseBody
 	private User getUser(@RequestParam(value="username", required=true) String userName) {
 		// read from the database
-		UserRepository repo = new UserRepositoryImpl();
+		UserRepository repo = new UserRepository(service);
 		
 		return repo.findOne(userName);
 		
@@ -56,7 +59,7 @@ class UserController {
 			@RequestParam(value="email", defaultValue="Email Not Specified") String email) {
 		
 		// write to the database here with try/catch
-		UserRepository repo = new UserRepositoryImpl();
+		IUserRepository repo = new UserRepository(service);
 		User user = new User(userName, name, email);	// id will be defined by the database
 		repo.save(user);
 		return user;
@@ -70,7 +73,7 @@ class UserController {
 			@RequestParam(value="id", required=true) long id) {
 
 		try {
-			UserRepository repo = new UserRepositoryImpl();
+			IUserRepository repo = new UserRepository(service);
 			repo.delete(id);
 		}
 		catch(MyResourceNotFoundException exc)
@@ -92,7 +95,7 @@ class UserController {
 		
 
 		// write to the database here, retrieve the userName with try/catch
-		UserRepository repo = new UserRepositoryImpl();
+		IUserRepository repo = new UserRepository(service);
 		User user = new User(id, "", name, email);
 		
 		try {
