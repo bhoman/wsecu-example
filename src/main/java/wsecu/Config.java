@@ -28,4 +28,5 @@ public class Config {
 	public JdbcOperations jdbcTemplate(DataSource ds) {
 		return new JdbcTemplate(ds);
 	}
+		
 }
